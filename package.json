@@ -1,0 +1,1 @@
+{ "name": "ps5-netcat-gui", "version": "1.0.0", "description": "Browser-only GUI to send payloads to a PS5 elfldr", "scripts": { "build": "./build.sh", "dev": "./build.sh && wrangler pages dev dist" }, "license": "MIT" }

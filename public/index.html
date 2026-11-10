@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PAYLOAD//SEND — PS5 payload sender, no relay</title>
+<meta name="description" content="Send .elf payloads to your PS5 elfldr straight from the browser. No relay, no install: drop a file, paste a URL, or one-click FTP Server, PKG Manager, Payload Manager and more.">
+<meta name="theme-color" content="#05060a">
+<link rel="canonical" href="https://sendpayload.pages.dev/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='2' y='2' width='12' height='12' rx='3' fill='%2339ff9f'/%3E%3C/svg%3E">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="PAYLOAD//SEND">
+<meta property="og:url" content="https://sendpayload.pages.dev/">
+<meta property="og:title" content="PAYLOAD//SEND — Ship PS5 payloads from your browser">
+<meta property="og:description" content="Send .elf payloads to your PS5 elfldr straight from the browser. No relay, no install: drop a file, paste a URL, or one-click FTP Server, PKG Manager, Payload Manager and more.">
+<meta property="og:image" content="https://sendpayload.pages.dev/og.jpg">
+<meta property="og:image:secure_url" content="https://sendpayload.pages.dev/og.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="PAYLOAD//SEND: Ship your payload. Send .elf payloads to your PS5 straight from the browser.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="PAYLOAD//SEND — Ship PS5 payloads from your browser">
+<meta name="twitter:description" content="Send .elf payloads to your PS5 elfldr straight from the browser. No relay, no install: drop a file, paste a URL, or one-click FTP Server, PKG Manager, Payload Manager and more.">
+<meta name="twitter:image" content="https://sendpayload.pages.dev/og.jpg">
+<meta name="twitter:image:alt" content="PAYLOAD//SEND: Ship your payload.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05060a; --panel:rgba(14,17,26,.72); --line:rgba(120,255,190,.14);
+  --txt:#e6edf3; --mut:#7d8796; --acc:#39ff9f; --acc2:#7c5cff; --acc3:#00d4ff; --err:#ff4d6d;
+  --mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace; --sans:'Space Grotesk',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--txt);font-family:var(--sans);overflow-x:hidden}
+/* grid + glow background */
+body::before{content:"";position:fixed;inset:0;z-index:-2;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:44px 44px;mask-image:radial-gradient(ellipse at 50% 30%,#000 30%,transparent 75%)}
+body::after{content:"";position:fixed;inset:-20%;z-index:-1;pointer-events:none;
+  background:radial-gradient(circle at 20% 15%,rgba(124,92,255,.28),transparent 40%),
+             radial-gradient(circle at 85% 25%,rgba(57,255,159,.18),transparent 38%),
+             radial-gradient(circle at 50% 100%,rgba(0,212,255,.15),transparent 45%);
+  animation:drift 18s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate(3%,-2%) scale(1.05)}}
+.scan{position:fixed;inset:0;pointer-events:none;z-index:50;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0 1px,transparent 1px 3px)}
+
+nav{display:flex;align-items:center;justify-content:space-between;padding:20px 28px;max-width:1100px;margin:auto;font-family:var(--mono);font-size:13px}
+.logo{display:flex;gap:10px;align-items:center;font-weight:800;letter-spacing:.08em}
+.logo i{width:12px;height:12px;border-radius:3px;background:var(--acc);box-shadow:0 0 14px var(--acc)}
+.pill{border:1px solid var(--line);border-radius:999px;padding:6px 12px;color:var(--mut)}
+.pill b{color:var(--acc)}
+
+header{text-align:center;padding:48px 20px 26px;max-width:900px;margin:auto}
+.tag{display:inline-block;font-family:var(--mono);font-size:12px;letter-spacing:.2em;color:var(--acc);
+  border:1px solid rgba(57,255,159,.35);background:rgba(57,255,159,.06);padding:6px 14px;border-radius:999px;margin-bottom:22px}
+h1{font-size:clamp(40px,8vw,84px);line-height:.95;letter-spacing:-.03em;font-weight:700}
+h1 .grad{background:linear-gradient(90deg,var(--acc),var(--acc3) 50%,var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 22px rgba(57,255,159,.25))}
+.cursor{display:inline-block;width:.5em;height:.82em;background:var(--acc);vertical-align:-.06em;margin-left:6px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.sub{margin-top:18px;color:var(--mut);font-size:17px}
+.sub code{font-family:var(--mono);color:var(--txt);background:rgba(255,255,255,.06);padding:2px 6px;border-radius:5px}
+
+main{max-width:1100px;margin:0 auto;padding:10px 20px 60px;display:grid;grid-template-columns:1.1fr .9fr;gap:20px}
+@media(max-width:860px){main{grid-template-columns:1fr}}
+.card{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:24px;backdrop-filter:blur(14px)}
+.card::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1px;pointer-events:none;
+  background:linear-gradient(135deg,rgba(57,255,159,.55),transparent 35%,transparent 65%,rgba(124,92,255,.55));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+.ct{font-family:var(--mono);font-size:12px;letter-spacing:.18em;color:var(--mut);margin-bottom:18px;display:flex;justify-content:space-between}
+.ct span:first-child::before{content:"// ";color:var(--acc)}
+
+.drop{border:1.5px dashed rgba(57,255,159,.35);border-radius:14px;padding:30px 18px;text-align:center;cursor:pointer;transition:.2s;background:rgba(57,255,159,.03)}
+.drop:hover,.drop.over{border-color:var(--acc);background:rgba(57,255,159,.08);box-shadow:0 0 30px rgba(57,255,159,.12) inset}
+.drop .ico{font-family:var(--mono);font-size:28px;color:var(--acc)}
+.drop p{margin-top:8px;color:var(--mut)} .drop p b{color:var(--txt)}
+.file{margin-top:12px;font-family:var(--mono);font-size:13px;display:none;justify-content:space-between;gap:10px;
+  padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid var(--line)}
+.file.show{display:flex} .file span:last-child{color:var(--acc);white-space:nowrap}
+.file span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.row{display:grid;grid-template-columns:1fr 130px;gap:12px;margin-top:18px}
+label{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.15em;color:var(--mut);margin-bottom:7px}
+input[type=text],input[type=number]{width:100%;font-family:var(--mono);font-size:16px;color:var(--txt);background:rgba(0,0,0,.45);
+  border:1px solid var(--line);border-radius:10px;padding:12px 14px;outline:none;transition:.15s}
+input:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(57,255,159,.15)}
+.presets{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.presets button{font-family:var(--mono);font-size:12px;color:var(--mut);background:transparent;border:1px solid var(--line);border-radius:999px;padding:5px 11px;cursor:pointer}
+.presets button:hover{color:var(--acc);border-color:var(--acc)}
+
+.actions{display:flex;gap:12px;margin-top:22px}
+.btn{flex:1;font-family:var(--mono);font-weight:800;font-size:15px;letter-spacing:.1em;border:0;border-radius:12px;padding:15px;cursor:pointer;transition:.15s}
+.btn.pri{color:#03130b;background:linear-gradient(90deg,var(--acc),var(--acc3));box-shadow:0 0 28px rgba(57,255,159,.35)}
+.btn.pri:hover{transform:translateY(-1px);box-shadow:0 0 40px rgba(57,255,159,.55)}
+.btn.sec{flex:0 0 auto;padding:15px 18px;color:var(--txt);background:rgba(255,255,255,.05);border:1px solid var(--line)}
+.btn.sec:hover{border-color:var(--acc3);color:var(--acc3)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.relaybox{display:none;margin-top:18px;padding:14px;border-radius:12px;border:1px solid rgba(124,92,255,.35);background:rgba(124,92,255,.06)}
+.relaybox.show{display:block}
+.relaybox .rr{display:grid;grid-template-columns:1fr auto;gap:10px}
+.relaybox p{margin-top:10px;color:var(--mut);font-size:13px;line-height:1.5}
+.relaybox code{font-family:var(--mono);font-size:12px;color:var(--txt);background:rgba(0,0,0,.4);padding:2px 6px;border-radius:5px}
+.relaybox a{color:var(--acc3)}
+.pill{cursor:default}
+.bar{height:6px;border-radius:99px;background:rgba(255,255,255,.06);margin-top:16px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--acc2),var(--acc));box-shadow:0 0 12px var(--acc);transition:width .1s}
+
+.term{font-family:var(--mono);font-size:13px;line-height:1.65;background:#020304;border:1px solid var(--line);border-radius:12px;
+  padding:14px;height:340px;overflow:auto;white-space:pre-wrap;word-break:break-all}
+.term .p{color:var(--acc)} .term .m{color:var(--mut)} .term .e{color:var(--err)} .term .o{color:var(--acc3)} .term .w{color:#ffd166}
+.dots{display:flex;gap:6px} .dots i{width:10px;height:10px;border-radius:50%;background:#333}
+.dots i:nth-child(1){background:#ff5f57}.dots i:nth-child(2){background:#febc2e}.dots i:nth-child(3){background:#28c840}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.stat{border:1px solid var(--line);border-radius:12px;padding:12px;text-align:center}
+.stat b{display:block;font-family:var(--mono);font-size:20px;color:var(--acc)} .stat small{color:var(--mut);font-size:11px;letter-spacing:.12em;font-family:var(--mono)}
+footer{text-align:center;color:var(--mut);font-family:var(--mono);font-size:12px;padding:0 20px 40px}
+.tabs{display:flex;gap:6px;margin-bottom:14px}
+.tabs button{flex:1;font-family:var(--mono);font-size:12px;letter-spacing:.12em;color:var(--mut);background:transparent;border:1px solid var(--line);border-radius:10px;padding:9px;cursor:pointer}
+.tabs button.on{color:var(--acc);border-color:var(--acc);background:rgba(57,255,159,.07)}
+.src{display:none} .src.on{display:block}
+.opts{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-top:12px;font-family:var(--mono);font-size:12px;color:var(--mut)}
+.opts label{display:flex;gap:7px;align-items:center;margin:0;letter-spacing:.05em;cursor:pointer}
+.note{margin-top:16px;padding:12px 14px;border-radius:12px;border:1px solid rgba(124,92,255,.35);background:rgba(124,92,255,.06);color:var(--mut);font-size:13px;line-height:1.5}
+.note b{color:var(--txt)} .note a{color:var(--acc3)}
+.fallback{display:none;margin-top:12px} .fallback.show{display:block}
+.fallback a{display:block;text-align:center;text-decoration:none}
+.quick{margin-top:22px}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.qgrid button{text-align:left;font-family:var(--mono);font-size:12px;line-height:1.35;color:var(--txt);background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;transition:.15s}
+.qgrid button small{display:block;color:var(--mut);font-size:10px;margin-top:3px}
+.qgrid button:hover:not(:disabled){border-color:var(--acc);color:var(--acc);box-shadow:0 0 18px rgba(57,255,159,.15)}
+.qgrid button:disabled{opacity:.45;cursor:not-allowed}
+</style>
+</head>
+<body>
+<div class="scan"></div>
+<nav>
+  <div class="logo"><i></i>PAYLOAD//SEND</div>
+  <div class="pill">mode <b>browser → elfldr</b></div>
+</nav>
+
+<header>
+  <div class="tag">◆ PS5 ELF LOADER · NO RELAY</div>
+  <h1>Ship your <span class="grad">payload</span><span class="cursor"></span></h1>
+  <p class="sub">Drop an <code>.elf</code> or paste a URL, aim it at your console, and fire. The browser talks to the PS5 elfldr directly, and the console pulls the payload itself.</p>
+</header>
+
+<main>
+  <section class="card">
+    <div class="ct"><span>TARGET &amp; PAYLOAD</span><span>01</span></div>
+
+    <div class="tabs"><button data-src="file" class="on">LOCAL FILE</button><button data-src="url">FROM URL</button></div>
+    <div class="src on" id="src-file">
+      <div class="drop" id="drop">
+        <div class="ico">[ ⇪ ]</div>
+        <p><b>Drop payload here</b> or click to browse</p>
+        <input type="file" id="file" accept=".elf,.bin,.self,application/octet-stream" hidden>
+      </div>
+      <div class="file" id="fileinfo"><span id="fname"></span><span id="fsize"></span></div>
+    </div>
+    <div class="src" id="src-url">
+      <label for="purl">PAYLOAD URL (http/https, reachable by the PS5)</label>
+      <input type="text" id="purl" spellcheck="false" autocomplete="off" placeholder="https://github.com/ps5-payload-dev/ftpsrv/releases/latest/download/ftpsrv-ps5.elf">
+    </div>
+
+    <div class="row">
+      <div><label for="ip">PS5 IP</label><input type="text" id="ip" placeholder="192.168.1.50" autocomplete="off" spellcheck="false"></div>
+      <div><label for="port">PORT</label><input type="number" id="port" min="1" max="65535" value="9021"></div>
+    </div>
+    <div class="row" style="grid-template-columns:1fr">
+      <div><label for="args">ARGS (optional)</label><input type="text" id="args" placeholder="--foo bar" autocomplete="off" spellcheck="false"></div>
+    </div>
+    <div class="opts"><label><input type="checkbox" id="pipe" checked> stream payload output here</label></div>
+
+    <div class="actions">
+      <button class="btn sec" id="probe">PROBE</button>
+      <button class="btn pri" id="send" disabled>SEND PAYLOAD ▸</button>
+      <button class="btn sec" id="stop" hidden>DETACH</button>
+    </div>
+    <div class="bar"><i id="bar"></i></div>
+    <div class="fallback" id="fallback"><a class="btn sec" id="fblink" target="_blank" rel="noopener">OPEN IN NEW TAB ▸</a></div>
+
+    <div class="stats">
+      <div class="stat"><b id="sBytes">0</b><small>PAYLOAD BYTES</small></div>
+      <div class="stat"><b id="sTime">–</b><small>ELAPSED</small></div>
+      <div class="stat"><b id="sCount">0</b><small>SENT OK</small></div>
+    </div>
+
+    <div class="quick">
+      <label>QUICK SEND (one click, straight from their release pages)</label>
+      <div class="qgrid" id="qgrid"></div>
+    </div>
+
+    <div class="note">
+      <b>How it works:</b> the elfldr (port 9021) also understands <code>GET /?uri=&lt;url&gt;</code>, so the PS5 downloads the payload itself.
+      A <b>URL</b> goes to the console as-is. A <b>local file</b> is first parked in a private one-shot link (deleted when the PS5 downloads it, or after 15 min).
+      Chrome/Edge ask to <b>allow local network access</b> the first time. Other browsers use the <i>open in new tab</i> fallback.
+      Needs the <a href="https://github.com/ps5-payload-dev/elfldr" target="_blank" rel="noopener">ps5-payload-dev elfldr</a> and internet access on the PS5.
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="ct"><span>CONSOLE</span><div class="dots"><i></i><i></i><i></i></div></div>
+    <div class="term" id="term"></div>
+  </section>
+</main>
+<footer>No relay, no install. Everything runs in this page: browser → PS5 elfldr over HTTP.</footer>
+
+<script>
+const $=id=>document.getElementById(id);
+const term=$('term'); let file=null, src=localStorage.src||'file', okCount=+localStorage.okCount||0, ctl=null;
+const MAGICS=[0x464C457F,0x1D3D154F,0xEEF51454]; // ELF, PS4 SELF, PS5 SELF (little-endian u32)
+$('sCount').textContent=okCount;
+$('ip').value=localStorage.ip||''; $('port').value=localStorage.port||9021; $('purl').value=localStorage.purl||''; $('args').value=localStorage.args||'';
+$('pipe').checked=localStorage.pipe!=='0';
+
+function log(msg,cls='m'){const t=new Date().toLocaleTimeString();term.innerHTML+=`<span class="m">[${t}]</span> <span class="${cls}">${String(msg).replace(/[<&]/g,c=>c=='<'?'&lt;':'&amp;')}</span>\n`;term.scrollTop=term.scrollHeight}
+function out(txt){term.innerHTML+=`<span class="o">${txt.replace(/[<&]/g,c=>c=='<'?'&lt;':'&amp;')}</span>`;term.scrollTop=term.scrollHeight}
+const fmt=n=>n<1024?n+' B':n<1048576?(n/1024).toFixed(1)+' KB':(n/1048576).toFixed(2)+' MB';
+const target=()=>({ip:$('ip').value.trim(),port:+$('port').value});
+const hasSrc=()=>src==='file'?!!file:/^https?:\/\/\S+$/i.test($('purl').value.trim());
+const valid=()=>hasSrc()&&target().ip&&target().port>0&&target().port<65536;
+const refresh=()=>{$('send').disabled=!!ctl||!valid();document.querySelectorAll('#qgrid button').forEach(b=>b.disabled=!!ctl);Object.assign(localStorage,{ip:target().ip,port:$('port').value,purl:$('purl').value.trim(),args:$('args').value,pipe:$('pipe').checked?'1':'0',src})};
+const hostPart=ip=>ip.includes(':')&&!ip.startsWith('[')?`[${ip}]`:ip;
+const ps5url=(ip,port,path)=>`http://${hostPart(ip)}:${port}${path}`;
+
+function setSrc(s){src=s;document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.src===s));
+  $('src-file').classList.toggle('on',s==='file');$('src-url').classList.toggle('on',s==='url');refresh()}
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>setSrc(b.dataset.src));
+setSrc(src);
+
+async function pick(f){if(!f)return;
+  const m=new DataView(await f.slice(0,4).arrayBuffer()); const magic=m.byteLength===4?m.getUint32(0,true):0;
+  if(!MAGICS.includes(magic)){log(`${f.name} is not an ELF/SELF payload, so elfldr would reject it`,'e');return}
+  file=f;$('fname').textContent=f.name;$('fsize').textContent=fmt(f.size);$('fileinfo').classList.add('show');
+  log(`loaded ${f.name} (${f.size} bytes)`,'o');refresh()}
+$('drop').onclick=()=>$('file').click();
+$('file').onchange=e=>pick(e.target.files[0]);
+['dragenter','dragover'].forEach(ev=>$('drop').addEventListener(ev,e=>{e.preventDefault();$('drop').classList.add('over')}));
+['dragleave','drop'].forEach(ev=>$('drop').addEventListener(ev,e=>{e.preventDefault();$('drop').classList.remove('over')}));
+$('drop').addEventListener('drop',e=>pick(e.dataTransfer.files[0]));
+['ip','port','purl','args'].forEach(k=>$(k).oninput=refresh); $('pipe').onchange=refresh;
+
+// fetch() to a LAN IP from an https page: Chrome's Local Network Access needs targetAddressSpace (permission prompt).
+const isLoop=h=>/^(localhost|127\.|\[?::1\]?$)/i.test(h);
+const lanFetch=(url,o={})=>{const h=new URL(url).hostname;
+  const lna=location.protocol==='https:'?{targetAddressSpace:isLoop(h)?'loopback':'local'}:{};
+  return fetch(url,{...lna,cache:'no-store',...o})};
+function showFallback(url){$('fblink').href=url;$('fallback').classList.add('show')}
+const blockedHint='the browser blocked the request (local network access denied, mixed content, or the PS5 is unreachable). Use OPEN IN NEW TAB, or allow local network access for this site.';
+
+// Upload a local file to the one-shot stash (XHR for progress).
+function stash(f){return new Promise((res,rej)=>{
+  const x=new XMLHttpRequest();x.open('POST','/api/stash?name='+encodeURIComponent(f.name));
+  x.setRequestHeader('content-type','application/octet-stream');
+  x.upload.onprogress=e=>{if(e.lengthComputable){$('bar').style.width=(e.loaded/e.total*60)+'%';$('sBytes').textContent=e.loaded}};
+  x.onload=()=>{let r;try{r=JSON.parse(x.responseText)}catch{r={ok:false,error:`HTTP ${x.status}`}}r.ok?res(r):rej(new Error(r.error))};
+  x.onerror=()=>rej(new Error('upload failed (network)'));x.send(f)})}
+
+$('probe').onclick=async()=>{
+  const {ip,port}=target(); if(!ip)return log('enter the PS5 IP first','w');
+  const url=ps5url(ip,port,'/__payloadsend_probe__'); log(`probe ${ip}:${port} ...`,'p'); const t0=performance.now();
+  try{const ac=new AbortController();const to=setTimeout(()=>ac.abort(),5000);
+    const r=await lanFetch(url,{signal:ac.signal});const txt=await r.text();clearTimeout(to);const ms=Math.round(performance.now()-t0);
+    /elfldr/i.test(txt)?log(`elfldr is listening (${ms} ms)`,'o'):log(`port ${port} answered (${ms} ms) but not like elfldr: ${txt.slice(0,80)}`,'w')}
+  catch(e){log(e.name==='AbortError'?'no answer within 5 s: is elfldr running and the IP right?':'probe failed: '+blockedHint,'e');showFallback(url)}
+};
+
+const QUICK=[
+  ['WebKit Autoloader Installer','v0.7.1','https://github.com/itsPLK/ps5-webkit-autoloader/releases/download/v0.7.1/webkit-autoloader-installer_v0.7.1.elf'],
+  ['FTP Server','v0.22','https://github.com/ps5-payload-dev/ftpsrv/releases/download/v0.22/ftpsrv-ps5-install.elf'],
+  ['PKG Manager','v1.5.1','https://github.com/itsPLK/ps5-pkg-manager/releases/download/v1.5.1/pkg-manager_v1.5.1.elf'],
+  ['Web File Manager','v1.13-rc2','https://github.com/owendswang/ps5-web-file-manager/releases/download/v1.13-rc2/web-file-mgr-v1.13-rc2.elf'],
+  ['Web File Manager 7z helper','v1.13-rc2','https://github.com/owendswang/ps5-web-file-manager/releases/download/v1.13-rc2/wfm-7zip-helper.elf'],
+  ['PS5 How Long To Beat','v0.2.0','https://github.com/heydemoura/ps5-hltb/releases/download/v0.2.0/hltb.elf'],
+  ['Payload Manager','v0.6.3','https://github.com/itsPLK/ps5-payload-manager/releases/download/v0.6.3/pldmgr_v0.6.3.elf'],
+  ['Elf Arsenal','v1.6.0','https://git.etawen.dev/soniciso/sonicloader/releases/download/v1.6.0-elf-arsenal-rebrand/sonic-loader.elf'],
+  ['ProsperoMgr','v1.2','https://github.com/notmaj0r/ProsperoMgr/releases/download/v1.2/ProsperoMgr.elf'],
+];
+QUICK.forEach(([name,ver,url])=>{const b=document.createElement('button');b.title=url;
+  b.innerHTML=`${name}<small>${ver} · ${url.split('/').pop()}</small>`;
+  b.onclick=()=>{const {ip,port}=target();if(!ip||!(port>0&&port<65536))return log('enter the PS5 IP and port first','w');
+    log(`quick send: ${name} ${ver}`,'p');send({url,label:name})};
+  $('qgrid').appendChild(b)});
+
+$('stop').onclick=()=>{if(ctl){ctl.abort();log('detached from payload output','w')}};
+
+// quick = {url,label}: send a preset URL (no args), regardless of the selected source tab
+async function send(quick){
+  if(ctl||(!quick&&!valid()))return; const {ip,port}=target(); const args=quick?'':$('args').value.trim(), pipe=$('pipe').checked;
+  const mode=quick?'url':src;
+  ctl=new AbortController(); refresh(); $('fallback').classList.remove('show'); $('bar').style.width='0'; const t0=performance.now();
+  const tick=()=>$('sTime').textContent=((performance.now()-t0)/1000).toFixed(2)+'s';
+  let stashId=null, ok=false;
+  try{
+    let purl;
+    if(mode==='file'){log(`parking ${file.name} (${fmt(file.size)}) in a one-shot link ...`,'p');
+      const r=await stash(file);purl=r.url;stashId=r.id;$('sBytes').textContent=r.bytes}
+    else{purl=quick?quick.url:$('purl').value.trim();$('sBytes').textContent='–'}
+    // elfldr only decodes %XX (not '+'), so build the query with encodeURIComponent
+    const q=[args&&'args='+encodeURIComponent(args),!pipe&&'pipe=0'].filter(Boolean).join('&');
+    const inner=purl+(q?(purl.includes('?')?'&':'?')+q:'');
+    const url=ps5url(ip,port,'/?uri='+encodeURIComponent(inner));
+    log(`$ curl "http://${ip}:${port}/?uri=${mode==='file'?'<one-shot link>/'+file.name:purl}"`,'p');
+    $('bar').style.width='70%';
+    let r; try{r=await lanFetch(url,{signal:ctl.signal})}
+    catch(e){if(e.name==='AbortError')throw e;showFallback(url);throw new Error(blockedHint)}
+    $('bar').style.width='85%';$('stop').hidden=false;
+    log(pipe?'connected: the PS5 is fetching the payload (DETACH any time) ...':'connected: the PS5 is fetching the payload ...','m');
+    const rd=r.body.getReader(), dec=new TextDecoder(); let got='', first=true;
+    for(;;){const {done,value}=await rd.read(); if(done)break;
+      const s=dec.decode(value,{stream:true}).replace(/\0/g,''); got+=s.slice(0,512);
+      if(first&&s){first=false;
+        if(/\[elfldr\.elf\] Error/.test(got))break; // loader reported a failure: handled below
+        ok=true;$('bar').style.width='100%';tick();okCount++;localStorage.okCount=okCount;$('sCount').textContent=okCount;
+        log(`elfldr accepted it, payload running on ${ip}:${port} ✓`,'o');stashId=null}
+      if(pipe&&s)out(s)}
+    if(!ok){const m=got.match(/\[elfldr\.elf\][^\n\r]*/);
+      if(m)throw new Error(m[0]+(mode==='url'?' (can the PS5 reach that URL?)':''));
+      ok=true;tick();okCount++;localStorage.okCount=okCount;$('sCount').textContent=okCount;$('bar').style.width='100%';
+      log(`elfldr accepted it, payload started on ${ip}:${port} ✓`,'o');stashId=null}
+    else log('payload closed its output','m');
+  }catch(e){if(e.name!=='AbortError'){$('bar').style.width='0';tick();log('error: '+e.message,'e')}}
+  finally{if(stashId)fetch('/api/stash?id='+stashId,{method:'DELETE'}).catch(()=>{});
+    ctl=null;$('stop').hidden=true;refresh()}
+}
+$('send').onclick=()=>send();
+
+log('ready. pick a payload (file or URL), set the PS5 IP, and the port (elfldr default 9021).');
+</script>
+</body>
+</html>
